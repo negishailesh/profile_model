@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Welcome, {{ user.get_full_name }} <small>{{ user.username }}</small>!</h2>
+
+<br>
+<div>
+<h3>LOCATION</h3>
+<select id="location" multiple="multiple">
+   {% for i in location %}
+    <option value="{{i.id}}">{{i.name}}</option>
+   {%endfor%}
+</select>
+</div>
+<br>
+<div>
+<h3>SKILLS</h3>
+<select id="skill" multiple="multiple">
+    {% for i in skill%}
+    <option value="{{i.id}}">{{i.name}}</option>
+    {%endfor%}
+</select>
+</div>
+<br>
+<div>
+<h3>EXPERIENCE</h3>
+<select id="exp" multiple="multiple">
+    <option value="1">0-1</option>
+    <option value="2">2-4</option>
+    <option value="3">4-6</option>
+    <option value="4">6-8</option>
+</select>
+</div>
+<br>
+<input type="button" id="btnSelected" value="Get Selected" />
+<br>
+<br>
+<table id="myTable" style=" background-repeat:no-repeat; ">
+</table>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript">
+    $('#btnSelected').click(function () {
+        var selected = $("#location option:selected");
+        var locate = [];
+        selected.each(function () {
+            locate.push($(this).val());
+        			});
+	
+	var selected = $("#skill option:selected");
+        var skill = [];
+        selected.each(function () {
+            skill.push($(this).val());
+        			});
+
+	var selected = $("#exp option:selected");
+        var exp = [];
+        selected.each(function () {
+            exp.push($(this).val());
+        		});
+	console.log(locate);
+	console.log(skill);
+	console.log(exp);
+	$("#myTable").html("");	
+	$.ajax({
+   		type: "POST",
+   		data: {locat:locate , ski :skill , expe:exp },
+   		url: "http://127.0.0.1:8000/check_profile/",
+   		success: function(msg){
+  				var response = jQuery.parseJSON(msg);
+				if (response.length == 0){
+					alert("NO RECORD FOUND")
+					return false;
+					}
+				$("#myTable").append("<tr><th>SERIAL NO&nbsp;&nbsp;</th><th>CANDIDATE NAME&nbsp;&nbsp;</th><th>DOWNLOAD RESUME</th></tr>");
+				$.each(response, function(){
+ 					console.log(this);
+    					var html = "<tr><td>" + this.fields.serial_no + "</td><td>" + this.fields.name + "</td><td><button class='download' value="+this.fields.serial_no+">" + this.fields.resume_status + "</button></td></tr>";
+    					$('#myTable').append(html);
+						});
+   			},
+		error: function(msg){
+			console.log(msg);
+			}
+		});
+    });
+
+
+$(".download").live( "click", function() {
+  var serial_no = $(this).val();
+  console.log(serial_no);
+  $.ajax({
+                type: "POST",
+                data: {serial : serial_no},
+                url: "http://127.0.0.1:8000/download_profile/",
+                success: function(msg){
+			var response = jQuery.parseJSON(msg);
+  			if (response.status)
+				{
+				alert(response.message)		
+				window.location.href = '/Users/negi/Downloads/cians/simple-signup/extra-fields/mysite/static_file/test.csv';	
+				}
+			else{
+				alert(response.message)
+				return fasle;
+				}
+                                                
+                        },
+                error: function(msg){
+                        console.log(msg);
+                        }
+                }); 
+});
+</script>	
+
+{% endblock %}
